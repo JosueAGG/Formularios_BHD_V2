@@ -300,30 +300,23 @@ aWriter.setCurrentObject(RESPUESTAS_KEY);
 		aWriter.addFormRow(Path.parse("defectomenu"));
 		endBlock(aWriter);
 		aWriter.setCurrentObject(RESPUESTAS_KEY);
-		//aWriter.addFormRow(Path.parse("Como_respuesta_riesgos_del_tratamiento"));
-	    aWriter.addFormRow(resultadosBox);//Cambiado
-		
+		aWriter.addFormRow(resultadosBox);		
 		aWriter.setCurrentObject(OBJECT_KEY);
 		startBooleanBlock(aPaneContext, aWriter, Path.parse("Asociadas_a_la_transferencia_de_datos"), "block_asociadas_a_la_transferencia_de_datos");
 		aWriter.addFormRow(Path.parse("asociacionmenu"));
 		endBlock(aWriter);
-//Duda
-		startBooleanBlock(aPaneContext, aWriter, Path.parse("Asociadas_al_procesamiento_de_parte_de_terceros"), "block_asociadas_al_procesamiento_de_parte_de_terceros");
-		
+		startBooleanBlock(aPaneContext, aWriter, Path.parse("Asociadas_al_procesamiento_de_parte_de_terceros"), "block_asociadas_al_procesamiento_de_parte_de_terceros");		
 		Path carPath = Path.parse("Cargo");
 		UIDropDownList carDropDown = aWriter.newDropDownList(carPath);
 		carDropDown.setActionOnAfterValueChanged(JsFunctionCall.on("displayBlockCargo"));
 		aWriter.addFormRow(carDropDown);
-		String value = (String) aPaneContext.getValueContext(OBJECT_KEY, carPath).getValue();
-		
+		String value = (String) aPaneContext.getValueContext(OBJECT_KEY, carPath).getValue();		
 		startBlock(aWriter, "block_cargo_encargado", "encargado".equalsIgnoreCase(value));	
 		aWriter.addFormRow(Path.parse("./Encargado/Descripcion"));
-		endBlock(aWriter);
-		
+		endBlock(aWriter);		
 		startBlock(aWriter, "block_cargo_subencargado", "subencargado".equalsIgnoreCase(value));
 		aWriter.addFormRow(Path.parse("./Subencargado/Descripcion"));
-		endBlock(aWriter);
-		
+		endBlock(aWriter);		
 		aWriter.endExpandCollapseBlock();
 		
 		
@@ -355,42 +348,33 @@ aWriter.setCurrentObject(RESPUESTAS_KEY);
 		
 		aWriter.endExpandCollapseBlock();	
 		//---------------------------------------
-///Duda2
+
 		aWriter.add_cr("<h3>Revisión metodológica</h3>");
-		aWriter.startExpandCollapseBlock(UserMessage.createInfo(""), true);
-		
+		aWriter.startExpandCollapseBlock(UserMessage.createInfo(""), true);		
 		Path revPath = Path.parse("Revision_metodologica");
 		UIDropDownList revDropDown = aWriter.newDropDownList(revPath);
 		revDropDown.setActionOnAfterValueChanged(JsFunctionCall.on("displayBlockRevision"));
 		aWriter.addFormRow(revDropDown);
-		String value2 = (String) aPaneContext.getValueContext(OBJECT_KEY, revPath).getValue();
-		
+		String value2 = (String) aPaneContext.getValueContext(OBJECT_KEY, revPath).getValue();		
 		startBlock(aWriter, "block_revision_aceptable", "aceptable".equalsIgnoreCase(value2));	
 		aWriter.addFormRow(Path.parse("Menu_aceptable"));
 		aWriter.addFormRow(Path.parse("ConcideracionesA"));
 		aWriter.addFormRow(Path.parse("NombreDRevisorA"));
 		aWriter.addFormRow(Path.parse("RoloCargoFAB"));
-		endBlock(aWriter);
-		
+		endBlock(aWriter);		
 		startBlock(aWriter, "block_revision_inaceptable", "inaceptable".equalsIgnoreCase(value2));
 		aWriter.addFormRow(Path.parse("MenuIna"));
 		aWriter.addFormRow(Path.parse("ConcideracionIna"));
 		aWriter.addFormRow(Path.parse("Nombrerevisorina"));
 		aWriter.addFormRow(Path.parse("RolocargoinaFAB"));
-		endBlock(aWriter);
-		
+		endBlock(aWriter);		
 		aWriter.endExpandCollapseBlock();
 		
 		
 		//-----------------------------------------------------
-
+			//Funcion que utiliza el campo riesgo y como respuesta al riesgo
 		aWriter.setCurrentObject(RESPUESTAS_KEY);
-	        
-
-	        
-
-
-        aWriter.addJS_cr("function resetBanner(){");
+		aWriter.addJS_cr("function resetBanner(){");
         aWriter.addJS_cr("var idBanner = ebx_form_getValue('" + aWriter.getPrefixedPath(Riesgo).format() + "');");
         aWriter.addJS_cr("var valorBanner = null;");
         aWriter.addJS_cr("if(idBanner != null){");
@@ -400,17 +384,13 @@ aWriter.setCurrentObject(RESPUESTAS_KEY);
 		aWriter.addJS_cr("previewURL: undefined");
 		aWriter.addJS_cr("};");
 		aWriter.addJS_cr("}");
-        aWriter.addJS_cr("ebx_form_setValue('" + aWriter.getPrefixedPath(Rriesgo).format() + "', valorBanner);");
-       // aWriter.addJS_cr("ebx_form_setValue('" + aWriter.getPrefixedPath(idBannerPath).format() + "', null);");
-        aWriter.addJS_cr("}");
-	
-	
-	aWriter.setCurrentObject(OBJECT_KEY);
+        aWriter.addJS_cr("ebx_form_setValue('" + aWriter.getPrefixedPath(Rriesgo).format() + "', valorBanner);");       
+        aWriter.addJS_cr("}");	
+	    aWriter.setCurrentObject(OBJECT_KEY);
 		
+				
 		
-		
-		
-		
+		//Funcion que ocupan los campo boolean para ocultar y mostrar 
         aWriter.addJS_cr("function displayBlock(buttonValue, blockId){");
         aWriter.addJS_cr("if (buttonValue == 'true'){");
         aWriter.addJS_cr("document.getElementById(blockId).style.display = 'block';");
@@ -420,7 +400,7 @@ aWriter.setCurrentObject(RESPUESTAS_KEY);
         aWriter.addJS_cr("}");
         aWriter.addJS_cr("}");
 		
-        
+        // Funcion que ocupan los campos String que tiene valores definidos y dependindo la selecion muestra los campos (Revisión metodológica)
         aWriter.addJS_cr("function displayBlockRevision(buttonValue){");
         aWriter.addJS_cr("const blockAceptable = document.getElementById('block_revision_aceptable');");
         aWriter.addJS_cr("const blockInaceptable = document.getElementById('block_revision_inaceptable');");
@@ -438,7 +418,7 @@ aWriter.setCurrentObject(RESPUESTAS_KEY);
         aWriter.addJS_cr("}");
         aWriter.addJS_cr("}");
 		
-
+     // Funcion que ocupan los campos String que tiene valores definidos y dependindo la selecion muestra los campos (Cargo)
         aWriter.addJS_cr("function displayBlockCargo(buttonValue){");
         aWriter.addJS_cr("const blockAceptable = document.getElementById('block_cargo_encargado');");
         aWriter.addJS_cr("const blockInaceptable = document.getElementById('block_cargo_subencargado');");
@@ -602,20 +582,17 @@ aWriter.setCurrentObject(RESPUESTAS_KEY);
 
 		@Override
 		public boolean accept(Adaptation anAdaptation, ValueContext aContext) {
-			String banVal = (String) vc.getValue(Riesgo);//OBTENER VALOR DEL RIESGO DEL CAMPO RIESGO
-			//String banVal="Abuso, falsificación o denegación de privilegios de acuerdo con los perfiles de usuarios";
-			String tablaVal = anAdaptation.getString(Path.parse("./Riesgo"));
-			//System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\t\t\t¡¡¡¡¡¡¡¡¡ ******  tablaVal ******** !!!!!!!!!!!!!!!!!"+tablaVal+"\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-			
-			if(banVal == null || tablaVal == null) { //Si el valor del campo riesgo y el valor de la tabla es null regresa falso
+			String banVal = (String) vc.getValue(Riesgo);
+			String tablaVal = anAdaptation.getString(Path.parse("./Riesgo"));			
+			if(banVal == null || tablaVal == null) { 
 				
 				return false;
 				
-			} else if(banVal.equals(tablaVal)) { //si el valor del campo riesgo coincide con el riesgo de la tabla entonces regresa truw
+			} else if(banVal.equals(tablaVal)) { 
 				
 				return true;
 				
-			} else { //Si no pasa nada de eso regresa falso
+			} else { 
 				
 				return false;
 				
