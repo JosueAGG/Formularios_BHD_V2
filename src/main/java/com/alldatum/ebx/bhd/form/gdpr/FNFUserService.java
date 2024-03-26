@@ -1,10 +1,33 @@
 package com.alldatum.ebx.bhd.form.gdpr;
 
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+
+
 import com.onwbp.adaptation.Adaptation;
 import com.onwbp.base.text.UserMessage;
+import com.orchestranetworks.instance.ValueContext;
+import com.orchestranetworks.instance.ValueContextForValidation;
+import com.orchestranetworks.query.Query;
+import com.orchestranetworks.query.QueryResult;
+import com.orchestranetworks.query.Tuple;
+import com.orchestranetworks.schema.Constraint;
+import com.orchestranetworks.schema.ConstraintContext;
+import com.orchestranetworks.schema.ConstraintEnumeration;
+import com.orchestranetworks.schema.InvalidSchemaException;
 import com.orchestranetworks.schema.Path;
+import com.orchestranetworks.schema.SchemaTypeName;
+import com.orchestranetworks.schema.TableRefFilter;
+import com.orchestranetworks.schema.TableRefFilterContext;
+import com.orchestranetworks.schema.dynamic.BeanDefinition;
+import com.orchestranetworks.schema.dynamic.BeanElement;
+import com.orchestranetworks.schema.dynamic.BeanFacetTableRef;
 import com.orchestranetworks.service.ServiceKey;
 import com.orchestranetworks.ui.base.JsFunctionCall;
+import com.orchestranetworks.ui.form.widget.UIComboBox;
 import com.orchestranetworks.ui.form.widget.UIDropDownList;
 import com.orchestranetworks.ui.form.widget.UIRadioButtonGroup;
 import com.orchestranetworks.ui.selection.RecordEntitySelection;
@@ -25,6 +48,11 @@ import com.orchestranetworks.userservice.UserServiceValidateContext;
 public class FNFUserService <T extends TableEntitySelection> implements UserService<T> {
 
 	private static final ObjectKey OBJECT_KEY = ObjectKey.forName("record");
+	private static final ObjectKey RESPUESTAS_KEY = ObjectKey.forName("respuestas");	  
+	private static final Path Riesgo = Path.parse("Medidas_garantias_privacidad_seguridad_adoptadas_funcion_riesgos");	  
+	private static final Path Rriesgo = Path.parse("Controles");
+	private static ValueContext vc;
+	private static Adaptation dataset;
 
 
 	@Override
@@ -35,7 +63,9 @@ public class FNFUserService <T extends TableEntitySelection> implements UserServ
 	}
 
 	@Override
-	public void setupDisplay(UserServiceSetupDisplayContext<T> anOutcome, UserServiceDisplayConfigurator aConfigurator) {
+	public void setupDisplay(UserServiceSetupDisplayContext<T> aContext, UserServiceDisplayConfigurator aConfigurator) {
+		if(aContext.isInitialDisplay())
+			vc = aContext.getValueContext(RESPUESTAS_KEY);
 		aConfigurator.setContent(this::pane);
 		aConfigurator.setDefaultButtons(this::save);
 		
@@ -43,11 +73,18 @@ public class FNFUserService <T extends TableEntitySelection> implements UserServ
 	
 	private UserServiceEventOutcome save(UserServiceEventContext aContext) {
 		
-		aContext.save(OBJECT_KEY);
+		aContext.save(OBJECT_KEY,RESPUESTAS_KEY);
 		return null;
 	}
 	
 	private void pane(UserServicePaneContext aPaneContext, UserServicePaneWriter aWriter) {
+		
+		aWriter.setCurrentObject(RESPUESTAS_KEY);		
+		UIComboBox riesgosBox = aWriter.newComboBox(Riesgo);
+		try {
+		riesgosBox.setActionOnAfterValueChanged(JsFunctionCall.on("resetBanner"));
+		}catch(Exception e) {e.getStackTrace();}
+		UIComboBox resultadosBox= aWriter.newComboBox(Rriesgo);
 		
 		aWriter.setCurrentObject(OBJECT_KEY);
 		
@@ -176,9 +213,19 @@ public class FNFUserService <T extends TableEntitySelection> implements UserServ
 		aWriter.endExpandCollapseBlock();
 		
 		aWriter.startExpandCollapseBlock(UserMessage.createInfo("Medidas y garantías de privacidad y seguridad adoptadas en función de los riesgos"), true);	
-		aWriter.addFormRow(Path.parse("Medidas_garantias_privacidad_seguridad_adoptadas_funcion_riesgos"));
-		aWriter.addFormRow(Path.parse("Controles"));
-		aWriter.addFormRow(Path.parse("Vinculacion_ficha_gestion_incidentes_privacidad"));
+		aWriter.setCurrentObject(RESPUESTAS_KEY);
+		aWriter.addFormRow(riesgosBox);
+		
+		aWriter.setCurrentObject(OBJECT_KEY);
+		//aWriter.addFormRow(Path.parse("Medidas_garantias_privacidad_seguridad_adoptadas_funcion_riesgos"));
+		aWriter.setCurrentObject(RESPUESTAS_KEY);
+		aWriter.addFormRow(resultadosBox);		
+		aWriter.setCurrentObject(OBJECT_KEY);
+		//aWriter.addFormRow(Path.parse("Controles"));
+		
+		startBooleanBlock(aPaneContext, aWriter, Path.parse("Vinculacion_ficha_gestion_incidentes_privacidadB"), "block_Vinculacion_ficha_gestion_incidentes_privacidadB");		
+		aWriter.addFormRow(Path.parse("Vinculacion_ficha_gestion_incidentes_privacidad"));		
+		endBlock(aWriter);	
 		aWriter.endExpandCollapseBlock();
 
 
@@ -213,6 +260,25 @@ public class FNFUserService <T extends TableEntitySelection> implements UserServ
 		//---------------------------------------
 		
 		
+		
+		
+		//Funcion que utiliza el campo riesgo y como respuesta al riesgo
+		aWriter.setCurrentObject(RESPUESTAS_KEY);
+		aWriter.addJS_cr("function resetBanner(){");
+        aWriter.addJS_cr("var idBanner = ebx_form_getValue('" + aWriter.getPrefixedPath(Riesgo).format() + "');");
+        aWriter.addJS_cr("var valorBanner = null;");
+        aWriter.addJS_cr("if(idBanner != null){");
+        aWriter.addJS_cr("var valorBanner = {");
+		aWriter.addJS_cr("key: idBanner,");
+		aWriter.addJS_cr("label: '',");
+		aWriter.addJS_cr("previewURL: undefined");
+		aWriter.addJS_cr("};");
+		aWriter.addJS_cr("}");
+        aWriter.addJS_cr("ebx_form_setValue('" + aWriter.getPrefixedPath(Rriesgo).format() + "', valorBanner);");       
+        aWriter.addJS_cr("}");	
+	    aWriter.setCurrentObject(OBJECT_KEY);
+		
+	  //Funcion que ocupan los campo boolean para ocultar y mostrar 
         aWriter.addJS_cr("function displayBlock(buttonValue, blockId){");
         aWriter.addJS_cr("if (buttonValue == 'true'){");
         aWriter.addJS_cr("document.getElementById(blockId).style.display = 'block';");
@@ -222,7 +288,8 @@ public class FNFUserService <T extends TableEntitySelection> implements UserServ
         aWriter.addJS_cr("}");
         aWriter.addJS_cr("}");
 		
-        
+        // Funcion que ocupan los campos String que tiene valores definidos y dependindo la selecion muestra los campos (Revisión metodológica)
+
         aWriter.addJS_cr("function displayBlockRevision(buttonValue){");
         aWriter.addJS_cr("const blockAceptable = document.getElementById('block_revision_aceptable');");
         aWriter.addJS_cr("const blockInaceptable = document.getElementById('block_revision_inaceptable');");
@@ -279,10 +346,32 @@ public class FNFUserService <T extends TableEntitySelection> implements UserServ
 	}
 
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void setupObjectContext(UserServiceSetupObjectContext<T> aContext, UserServiceObjectContextBuilder aBuilder) {
 		if(aContext.isInitialDisplay()) {
+			dataset=aContext.getEntitySelection().getDataset();
+			BeanDefinition def = aBuilder.createBeanDefinition();
+			aBuilder.registerBean(RESPUESTAS_KEY, def);
 			
+			BeanElement riesgosElement= def.createElement(Riesgo, SchemaTypeName.XS_STRING);
+			//BeanFacetTableRef predcate =riesgosElement.addFacetTableRef(dataset.getTable(Path.parse("/root/Catalogos/Matrices/Catalogo_de_Riesgos_de_Objetivos_de_Riesgo_conforme_objetivos/Riesgos_conforme_objetivos")));
+			//predcate.setDisplayPattern("${./ID} - ${./Riesgo}");
+			riesgosElement.addFacetConstraint((Class<? extends Constraint<?>>) EnumerationConstraint.class);
+			riesgosElement.setMinOccurs(1);
+			riesgosElement.setMinOccursErrorMessage("Obligatorio");
+			riesgosElement.setLabel("Riesgo");
+			
+			
+			
+			BeanElement resriesgo= def.createElement(Rriesgo, SchemaTypeName.XS_STRING);
+			//elemento= def.createElement(Rriesgo, SchemaTypeName.XS_STRING);
+			resriesgo.setLabel("Respuesta al riesgo");
+			BeanFacetTableRef respuestasFacet =resriesgo.addFacetTableRef(dataset.getTable(Path.parse("/root/Catalogos/Matrices/Catalogo_de_Riesgos_de_Objetivos_de_Riesgo_conforme_objetivos/Riesgos_conforme_objetivos")));
+			respuestasFacet.setDisplayPattern("${./ID} - ${./Controles_genericos}");
+			respuestasFacet.setFilter(CustomFilter.class);
+			resriesgo.setMinOccurs(1);
+			resriesgo.setMinOccursErrorMessage("OBLIGATORIO");
 			TableEntitySelection selection = aContext.getEntitySelection();
 			
 			if(selection instanceof RecordEntitySelection) {
@@ -309,5 +398,87 @@ public class FNFUserService <T extends TableEntitySelection> implements UserServ
 		// TODO Auto-generated method stub
 		
 	}
+	public static class EnumerationConstraint<T> implements ConstraintEnumeration<T> {
 
+		@Override
+		public void checkOccurrence(T arg0, ValueContextForValidation arg1) throws InvalidSchemaException {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void setup(ConstraintContext arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public String toUserDocumentation(Locale arg0, ValueContext arg1) throws InvalidSchemaException {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public String displayOccurrence(T arg0, ValueContext arg1, Locale arg2) throws InvalidSchemaException {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public List<T> getValues(ValueContext aContext) throws InvalidSchemaException {
+		Query<Tuple> query = dataset.createQuery("SELECT DISTINCT Riesgo FROM \"/root/Catalogos/Matrices/Catalogo_de_Riesgos_de_Objetivos_de_Riesgo_conforme_objetivos/Riesgos_conforme_objetivos\""); 
+			
+			List<T> valuesList = new ArrayList<T>();
+			
+			try(QueryResult<Tuple> result=  query.getResult()){
+				
+				Iterator<Tuple> it = result.iterator();
+				
+				while(it.hasNext()) {
+					
+					valuesList.add((T) it.next().get(0, String.class));
+						
+				}
+				
+			}
+			
+			return valuesList;
+		}
+		
+	}
+	
+	public static class CustomFilter implements TableRefFilter {
+
+		@Override
+		public boolean accept(Adaptation anAdaptation, ValueContext aContext) {
+			String banVal = (String) vc.getValue(Riesgo);
+			String tablaVal = anAdaptation.getString(Path.parse("./Riesgo"));			
+			if(banVal == null || tablaVal == null) { 
+				
+				return false;
+				
+			} else if(banVal.equals(tablaVal)) { 
+				
+				return true;
+				
+			} else { 
+				
+				return false;
+				
+			}
+		}
+
+		@Override
+		public void setup(TableRefFilterContext aContext) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public String toUserDocumentation(Locale aContext, ValueContext arg1) throws InvalidSchemaException {
+			// TODO Auto-generated method stub
+			return null;
+		}
+	}
 }

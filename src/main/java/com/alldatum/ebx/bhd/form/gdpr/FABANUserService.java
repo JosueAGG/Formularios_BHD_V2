@@ -77,8 +77,7 @@ public class FABANUserService<T extends TableEntitySelection> implements UserSer
 	
 	private void pane(UserServicePaneContext aPaneContext, UserServicePaneWriter aWriter) {
 		
-aWriter.setCurrentObject(RESPUESTAS_KEY);
-		
+		aWriter.setCurrentObject(RESPUESTAS_KEY);		
 		
 		UIComboBox riesgosBox = aWriter.newComboBox(Riesgo);
 		try {
