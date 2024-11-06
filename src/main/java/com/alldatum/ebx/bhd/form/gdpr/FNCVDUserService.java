@@ -1,19 +1,24 @@
 package com.alldatum.ebx.bhd.form.gdpr;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
+import com.alldatum.ebx.bhd.util.AdaptationUtil;
+import com.alldatum.ebx.bhd.widget.UILinkableListWidget;
+import com.alldatum.ebx.bhd.widget.UILinkableListWidgetFactory;
 import com.onwbp.adaptation.Adaptation;
+import com.onwbp.adaptation.AdaptationTable;
+import com.onwbp.adaptation.PrimaryKey;
 import com.onwbp.base.text.UserMessage;
 import com.orchestranetworks.instance.ValueContext;
 import com.orchestranetworks.instance.ValueContextForValidation;
+import com.orchestranetworks.interactions.InteractionHelper.ParametersMap;
+import com.orchestranetworks.interactions.SessionInteraction;
 import com.orchestranetworks.query.Query;
 import com.orchestranetworks.query.QueryResult;
 import com.orchestranetworks.query.Tuple;
-import com.orchestranetworks.schema.Constraint;
 import com.orchestranetworks.schema.ConstraintContext;
 import com.orchestranetworks.schema.ConstraintEnumeration;
 import com.orchestranetworks.schema.InvalidSchemaException;
@@ -25,6 +30,7 @@ import com.orchestranetworks.schema.dynamic.BeanDefinition;
 import com.orchestranetworks.schema.dynamic.BeanElement;
 import com.orchestranetworks.schema.dynamic.BeanFacetTableRef;
 import com.orchestranetworks.service.ServiceKey;
+import com.orchestranetworks.ui.UIButtonSpecSubmit;
 import com.orchestranetworks.ui.base.JsFunctionCall;
 import com.orchestranetworks.ui.form.widget.UIComboBox;
 import com.orchestranetworks.ui.form.widget.UIDropDownList;
@@ -33,6 +39,8 @@ import com.orchestranetworks.ui.selection.RecordEntitySelection;
 import com.orchestranetworks.ui.selection.TableEntitySelection;
 import com.orchestranetworks.userservice.ObjectKey;
 import com.orchestranetworks.userservice.UserService;
+import com.orchestranetworks.userservice.UserServiceAjaxContext;
+import com.orchestranetworks.userservice.UserServiceAjaxResponse;
 import com.orchestranetworks.userservice.UserServiceDisplayConfigurator;
 import com.orchestranetworks.userservice.UserServiceEventContext;
 import com.orchestranetworks.userservice.UserServiceEventOutcome;
@@ -43,14 +51,53 @@ import com.orchestranetworks.userservice.UserServiceProcessEventOutcomeContext;
 import com.orchestranetworks.userservice.UserServiceSetupDisplayContext;
 import com.orchestranetworks.userservice.UserServiceSetupObjectContext;
 import com.orchestranetworks.userservice.UserServiceValidateContext;
+import com.orchestranetworks.userservice.UserServiceWriter;
 
 public class FNCVDUserService <T extends TableEntitySelection> implements UserService<T> {
 
 	private static final ObjectKey OBJECT_KEY = ObjectKey.forName("record");
 	private static final ObjectKey RESPUESTAS_KEY = ObjectKey.forName("respuestas");	  
-	private static final Path Riesgo = Path.parse("Riesgo");	  
-	private static final Path Rriesgo = Path.parse("Como_respuesta_riesgos_del_tratamiento");
-	private static ValueContext vc;
+	private static final Path Riesgo = Path.parse("Medidas_garantias_privacidad_seguridad_adoptadas_funcion_riesgos");	  
+	private static final Path Rriesgo = Path.parse("Controles_F");
+	private static final Path RESPUESTA_RIESGO_FOCUS = Path.parse("resriesgofocus");
+
+	
+	//heredar datos
+	private static final Path NOMBRE_TRATAMIENTO_PATH = Path.parse("NombreT");
+	private static final Path ID_FAB_PATH = Path.parse("identificadorFANB");
+	private static final Path PROCESOS_OPERATIVOS_PATH = Path.parse("Procesos_operativos_o_comerciales");
+	
+	
+	
+	//Datos de revisor metodológico
+	//Aceptable
+	private static final Path MENU_ACEPTABLE_PATH = Path.parse("./Menuacep2");
+	private static final Path CONDICION_ACEPTABLE_PATH = Path.parse("./Consiadi");
+	private static final Path NOMBRE_REVISORA_PATH = Path.parse("./NombrerevisorFNCV");
+	private static final Path ROL_CARGOA_PATH = Path.parse("./RolcargoFNCV");
+	
+
+	//iInaceptable
+	private static final Path MENU_INACEPTABLE_PATH = Path.parse("./Menuinacep2");
+	private static final Path CONDICION_INACEPTABLE_PATH = Path.parse("./ConcideinaFCV");
+	private static final Path NOMBRE_REVISORI_PATH = Path.parse("./NombrerevFCVDINA");
+	private static final Path ROL_CARGOI_PATH = Path.parse("./RolocargoFNCVina");
+	
+	
+	
+	private String idFABPrefix;
+	private String procesosPrefix;
+	//prefic aceptable
+    String MAceptablePrefix;
+    String CAceptablePrefix;
+    String NRvisorAPrefix;
+    String RCRevisorAPrefix;
+
+    String MInaceptablePrefix;
+    String CInaceptablePrefix;
+    String NRvisorIPrefix ;
+    String RCRevisorIPrefix;
+	
 	private static Adaptation dataset;
 
 	@Override
@@ -61,34 +108,96 @@ public class FNCVDUserService <T extends TableEntitySelection> implements UserSe
 
 	@Override
 	public void setupDisplay(UserServiceSetupDisplayContext<T> aContext, UserServiceDisplayConfigurator aConfigurator) {
-		if(aContext.isInitialDisplay())
-			vc = aContext.getValueContext(RESPUESTAS_KEY);
 		aConfigurator.setContent(this::pane);
-		aConfigurator.setDefaultButtons(this::save);
+		
+		UIButtonSpecSubmit saveButton = aConfigurator.newSaveButton(this::save);
+		saveButton.setId("saveButtonId");
+		
+		aConfigurator.setLeftButtons(saveButton, aConfigurator.newCloseButton());
 		
 	}
 	
+	@SuppressWarnings("unchecked")
 	private UserServiceEventOutcome save(UserServiceEventContext aContext) {
 		
-		aContext.save(OBJECT_KEY,RESPUESTAS_KEY);
+		List<String> riesgoList = (List<String>) aContext.getValueContext(RESPUESTAS_KEY, Riesgo).getValue();
+		List<String> rriesgoList = (List<String>) aContext.getValueContext(RESPUESTAS_KEY, Rriesgo).getValue();
+		aContext.getValueContext(OBJECT_KEY, Riesgo).setNewValue(riesgoList);	
+		aContext.getValueContext(OBJECT_KEY, Rriesgo).setNewValue(rriesgoList);
+		
+		if(!aContext.save(OBJECT_KEY).hasFailed()) {
+			
+			if(aContext.getSession().isInWorkflowInteraction(false)) {
+				
+				ServiceKey sk = aContext.getServiceKey();
+				if(sk.equals(ServiceKey.CREATE) || sk.equals(ServiceKey.DUPLICATE)) {
+					
+					Adaptation record = AdaptationUtil.getRecordForValueContext(aContext.getValueContext(OBJECT_KEY));
+					String recordString = record.toXPathExpression();
+					
+					SessionInteraction si = aContext.getSession().getInteraction(false);
+					ParametersMap internalMap = new ParametersMap();			
+					internalMap.setVariableString("created", recordString);
+					si.complete(internalMap);		
+					
+				}		
+			} 
+		}
 		return null;
 	}
 	
 private void pane(UserServicePaneContext aPaneContext, UserServicePaneWriter aWriter) {
 	
-	aWriter.setCurrentObject(RESPUESTAS_KEY);	
-	UIComboBox riesgosBox = aWriter.newComboBox(Riesgo);
-	try {
-	riesgosBox.setActionOnAfterValueChanged(JsFunctionCall.on("resetBanner"));
-	}catch(Exception e) {e.getStackTrace();}
-	UIComboBox resultadosBox= aWriter.newComboBox(Rriesgo);
-		aWriter.setCurrentObject(OBJECT_KEY);
+    // Prefijos para Aceptable
+   MAceptablePrefix = aWriter.getPrefixedPath(MENU_ACEPTABLE_PATH).format();		    
+   CAceptablePrefix = aWriter.getPrefixedPath(CONDICION_ACEPTABLE_PATH).format();		    
+   NRvisorAPrefix = aWriter.getPrefixedPath(NOMBRE_REVISORA_PATH).format();		    
+   RCRevisorAPrefix = aWriter.getPrefixedPath(ROL_CARGOA_PATH).format();
+   
+
+    // Prefijos para Inaceptable
+  MInaceptablePrefix = aWriter.getPrefixedPath(MENU_INACEPTABLE_PATH).format();
+  CInaceptablePrefix = aWriter.getPrefixedPath(CONDICION_INACEPTABLE_PATH).format();
+  NRvisorIPrefix = aWriter.getPrefixedPath(NOMBRE_REVISORI_PATH).format();
+  RCRevisorIPrefix = aWriter.getPrefixedPath(ROL_CARGOI_PATH).format();
+	
+	aWriter.setCurrentObject(RESPUESTAS_KEY);
+	String rriesgofocusPrefix = aWriter.getPrefixedPath(RESPUESTA_RIESGO_FOCUS).format();
+
+	UILinkableListWidget riesgosBox = (UILinkableListWidget) aWriter.newCustomWidget(Riesgo, new UILinkableListWidgetFactory());
+	riesgosBox.setId("riesgosWidget");
+
+	UILinkableListWidget resultadosBox = (UILinkableListWidget) aWriter.newCustomWidget(Rriesgo, new UILinkableListWidgetFactory());
+	resultadosBox.setId("resultadosWidget");
+	resultadosBox.setPathForSelectedNode(Path.parse("../resriesgofocus"));
+	
+	riesgosBox.linkWidget(resultadosBox);
+	
+	aWriter.add("<div ");
+	aWriter.addSafeAttribute("style", "display:none;");
+	aWriter.add_cr(">");
+	aWriter.addFormRow(RESPUESTA_RIESGO_FOCUS);
+	aWriter.add_cr("</div>");
+	
+	aWriter.setCurrentObject(OBJECT_KEY);
+	
+	
+	idFABPrefix = aWriter.getPrefixedPath(ID_FAB_PATH).format();
+	procesosPrefix = aWriter.getPrefixedPath(PROCESOS_OPERATIVOS_PATH).format();
+	
+	
+	
+	
+	
+	
 		
 		aWriter.add_cr("<h3>Datos básicos del tratamiento de nivel ciclo de vida de datos</h3>");	
 		aWriter.startExpandCollapseBlock(UserMessage.createInfo(""), true);
 		aWriter.addFormRow(Path.parse("Identificador"));
-		aWriter.addFormRow(Path.parse("NombreT"));
-		aWriter.addFormRow(Path.parse("identificadorFANB"));
+		UIComboBox inhTipImp = aWriter.newComboBox(NOMBRE_TRATAMIENTO_PATH);
+		inhTipImp.setActionOnAfterValueChanged(JsFunctionCall.on("updateInheritedFields"));	
+		aWriter.addFormRow(inhTipImp);	
+		aWriter.addFormRow(ID_FAB_PATH);		
 		aWriter.addFormRow(Path.parse("Fecha_creacion"));
 		startBooleanBlock(aPaneContext, aWriter, Path.parse("Ficha_analisis_fase"), "block_ficha_analisis_fase");
 		aWriter.addFormRow(Path.parse("ID_Ficha_Analisis_de_Fases_del_Tratamiento"));
@@ -185,7 +294,7 @@ private void pane(UserServicePaneContext aPaneContext, UserServicePaneWriter aWr
 		//----------------------------------------
 		aWriter.add_cr("<h3>Procesos operativos o procesos comerciales vinculados al tratamiento</h3>");	
 		aWriter.startExpandCollapseBlock(UserMessage.createInfo(""), true);
-		aWriter.addFormRow(Path.parse("Procesos_operativos_o_comerciales"));
+		aWriter.addFormRow(PROCESOS_OPERATIVOS_PATH);
 		aWriter.endExpandCollapseBlock();
 		//----------------------------------------
 		aWriter.add_cr("<h3>Nombre de la fase del ciclo de vida</h3>");	
@@ -359,17 +468,17 @@ private void pane(UserServicePaneContext aPaneContext, UserServicePaneWriter aWr
 		String value = (String) aPaneContext.getValueContext(OBJECT_KEY, revPath).getValue();
 		
 		startBlock(aWriter, "block_revision_aceptable", "aceptable".equalsIgnoreCase(value));	
-		aWriter.addFormRow(Path.parse("Menuacep2"));
-		aWriter.addFormRow(Path.parse("Consiadi"));
-		aWriter.addFormRow(Path.parse("NombrerevisorFNCV"));
-		aWriter.addFormRow(Path.parse("RolcargoFNCV"));
+		aWriter.addFormRow(MENU_ACEPTABLE_PATH);
+		aWriter.addFormRow(CONDICION_ACEPTABLE_PATH);
+		aWriter.addFormRow(NOMBRE_REVISORA_PATH);
+		aWriter.addFormRow(ROL_CARGOA_PATH);
 		endBlock(aWriter);
 		
 		startBlock(aWriter, "block_revision_inaceptable", "inaceptable".equalsIgnoreCase(value));
-		aWriter.addFormRow(Path.parse("Menuinacep2"));
-		aWriter.addFormRow(Path.parse("ConcideinaFCV"));
-		aWriter.addFormRow(Path.parse("NombrerevFCVDINA"));
-		aWriter.addFormRow(Path.parse("RolocargoFNCVina"));
+		aWriter.addFormRow(MENU_INACEPTABLE_PATH);
+		aWriter.addFormRow( CONDICION_INACEPTABLE_PATH);
+		aWriter.addFormRow(NOMBRE_REVISORI_PATH);
+		aWriter.addFormRow(ROL_CARGOI_PATH);
 		endBlock(aWriter);
 		
 		aWriter.endExpandCollapseBlock();
@@ -406,25 +515,75 @@ private void pane(UserServicePaneContext aPaneContext, UserServicePaneWriter aWr
 	     aWriter.addJS_cr("}");
 		
 	    // Funcion que ocupan los campos String que tiene valores definidos y dependindo la selecion muestra los campos (Revisión metodológica)
-        aWriter.addJS_cr("function displayBlockRevision(buttonValue){");
-        aWriter.addJS_cr("const blockAceptable = document.getElementById('block_revision_aceptable');");
-        aWriter.addJS_cr("const blockInaceptable = document.getElementById('block_revision_inaceptable');");
-        aWriter.addJS_cr("if (buttonValue == 'Aceptable'){");
-        aWriter.addJS_cr("blockAceptable.style.display = 'block';");
-        aWriter.addJS_cr("blockInaceptable.style.display = 'none';");
-        aWriter.addJS_cr("}");
-        aWriter.addJS_cr("else if(buttonValue == 'Inaceptable'){");
-        aWriter.addJS_cr("blockAceptable.style.display = 'none';");
-        aWriter.addJS_cr("blockInaceptable.style.display = 'block';");
-        aWriter.addJS_cr("}");
-        aWriter.addJS_cr("else {");
-        aWriter.addJS_cr("blockAceptable.style.display = 'none';");
-        aWriter.addJS_cr("blockInaceptable.style.display = 'none';");
-        aWriter.addJS_cr("}");
-        aWriter.addJS_cr("}");
-	
-        
+	 	aWriter.addJS_cr("function displayBlockRevision(buttonValue) {");
+		aWriter.addJS_cr("  const blockAceptable = document.getElementById('block_revision_aceptable');");
+		aWriter.addJS_cr("  const blockInaceptable = document.getElementById('block_revision_inaceptable');");
+		aWriter.addJS_cr("  if (buttonValue === 'Aceptable') {");
+		aWriter.addJS_cr("    resetValuesList('" + MInaceptablePrefix + "');");
+		aWriter.addJS_cr("    resetValuesList('" + CInaceptablePrefix + "');");
+		aWriter.addJS_cr("    resetFieldValue('" + NRvisorIPrefix + "');");
+		aWriter.addJS_cr("    resetFieldValue('" + RCRevisorIPrefix + "');");
+		aWriter.addJS_cr("    blockAceptable.style.display = 'block';");
+		aWriter.addJS_cr("    blockInaceptable.style.display = 'none';");
+		aWriter.addJS_cr("  } else if (buttonValue === 'Inaceptable') {");
+		aWriter.addJS_cr("    resetValuesList('" + MAceptablePrefix + "');");
+		aWriter.addJS_cr("    resetValuesList('" + CAceptablePrefix + "');");
+		aWriter.addJS_cr("    resetFieldValue('" + NRvisorAPrefix + "');");
+		aWriter.addJS_cr("    resetFieldValue('" + RCRevisorAPrefix + "');");
+		aWriter.addJS_cr("    blockAceptable.style.display = 'none';");
+		aWriter.addJS_cr("    blockInaceptable.style.display = 'block';");
+		aWriter.addJS_cr("  } else {");
+		aWriter.addJS_cr("    resetValuesList('" + MAceptablePrefix + "');");
+		aWriter.addJS_cr("    resetValuesList('" + CAceptablePrefix + "');");
+		aWriter.addJS_cr("    resetFieldValue('" + NRvisorAPrefix + "');");
+		aWriter.addJS_cr("    resetFieldValue('" + RCRevisorAPrefix + "');");
+		aWriter.addJS_cr("    blockAceptable.style.display = 'none';");
+		aWriter.addJS_cr("    blockInaceptable.style.display = 'none';");
+		aWriter.addJS_cr("  }");
+		aWriter.addJS_cr("}");
 
+		aWriter.addJS_cr("function resetValuesList(path) {");
+		aWriter.addJS_cr("  let i = 0;");
+		aWriter.addJS_cr("  while (ebx_form_isNodeDefined(path + '[' + i + ']')) {");
+		aWriter.addJS_cr("    ebx_form_setValue(path + '[' + i + ']', null);");
+		aWriter.addJS_cr("    i++;");
+		aWriter.addJS_cr("  }");
+		aWriter.addJS_cr("}");
+
+		aWriter.addJS_cr("function resetFieldValue(path) {");
+		aWriter.addJS_cr("  ebx_form_setValue(path, null);");
+		aWriter.addJS_cr("}");
+
+               
+	
+        aWriter.addJS_cr("document.getElementById('saveButtonId').addEventListener('mouseover', function(){");   
+        aWriter.addJS_cr("ebx_form_setValue('" + rriesgofocusPrefix + "', null);"); 
+        aWriter.addJS_cr("});");
+
+		//Funcion para heredar datos
+        aWriter.addJS_cr("AjaxHandler = function (){");
+        aWriter.addJS_cr("this.handleAjaxResponseSuccess = function(responseContent){");
+        aWriter.addJS_cr("};");
+        aWriter.addJS_cr("this.handleAjaxResponseFailed = function(responseContent){");
+        aWriter.addJS_cr("};");
+        aWriter.addJS_cr("};");
+        
+        aWriter.addJS_cr("AjaxHandler.prototype = new EBX_AJAXResponseHandler();");
+
+        aWriter.addJS_cr("function callAjaxComponent(value){");
+        aWriter.addJS_cr("var handler = new AjaxHandler();");
+        aWriter.addJS_cr("var requestParameters = '&fieldValue=' + value;");
+        aWriter.addJS_cr("var request = '" + aWriter.getURLForAjaxRequest(this::ajaxCallback) + "' + requestParameters;"); 
+        aWriter.addJS_cr("handler.sendRequest(request);");
+        aWriter.addJS_cr("}");
+
+        aWriter.addJS_cr("function updateInheritedFields(value){");
+        aWriter.addJS_cr("if(value == null){");
+        aWriter.addJS_cr("callAjaxComponent('');");
+        aWriter.addJS_cr("}else{");
+        aWriter.addJS_cr("callAjaxComponent(value.key);");
+        aWriter.addJS_cr("}");
+        aWriter.addJS_cr("}");
 
         
         
@@ -477,61 +636,110 @@ private void pane(UserServicePaneContext aPaneContext, UserServicePaneWriter aWr
 
 	@Override
 	public void setupObjectContext(UserServiceSetupObjectContext<T> aContext, UserServiceObjectContextBuilder aBuilder) {
-	if(aContext.isInitialDisplay()) {
+		if(aContext.isInitialDisplay()) {
 			
-		dataset=aContext.getEntitySelection().getDataset();
-		BeanDefinition def = aBuilder.createBeanDefinition();
-		aBuilder.registerBean(RESPUESTAS_KEY, def);
-		
-		BeanElement riesgosElement= def.createElement(Riesgo, SchemaTypeName.XS_STRING);
-		//BeanFacetTableRef predcate =riesgosElement.addFacetTableRef(dataset.getTable(Path.parse("/root/Catalogos/Matrices/Catalogo_de_Riesgos_de_Objetivos_de_Riesgo_conforme_objetivos/Riesgos_conforme_objetivos")));
-		//predcate.setDisplayPattern("${./ID} - ${./Riesgo}");
-		riesgosElement.addFacetConstraint((Class<? extends Constraint<?>>) EnumerationConstraint.class);
-		riesgosElement.setMinOccurs(1);
-		riesgosElement.setMinOccursErrorMessage("Obligatorio");
-		riesgosElement.setLabel("Riesgo");
-		
-		
-		
-		BeanElement resriesgo= def.createElement(Rriesgo, SchemaTypeName.XS_STRING);
-		//elemento= def.createElement(Rriesgo, SchemaTypeName.XS_STRING);
-		resriesgo.setLabel("Respuesta al riesgo");
-		BeanFacetTableRef respuestasFacet =resriesgo.addFacetTableRef(dataset.getTable(Path.parse("/root/Catalogos/Matrices/Catalogo_de_Riesgos_de_Objetivos_de_Riesgo_conforme_objetivos/Riesgos_conforme_objetivos")));
-		respuestasFacet.setDisplayPattern("${./ID} - ${./Controles_genericos}");
-		respuestasFacet.setFilter(CustomFilter.class);
-		resriesgo.setMinOccurs(1);
-		resriesgo.setMinOccursErrorMessage("OBLIGATORIO");
-		TableEntitySelection selection = aContext.getEntitySelection();
+			dataset = aContext.getEntitySelection().getDataset();
+			BeanDefinition def = aBuilder.createBeanDefinition();
+			aBuilder.registerBean(RESPUESTAS_KEY, def);			
 			
-			if(selection instanceof RecordEntitySelection) {
+			BeanElement riesgosElement= def.createElement(Riesgo, SchemaTypeName.XS_STRING);
+			riesgosElement.addFacetConstraint(EnumerationConstraint.class);
+			riesgosElement.setMinOccurs(0);
+			riesgosElement.setMinOccursErrorMessage("");
+			riesgosElement.setLabel("Riesgo");
+			riesgosElement.setMaxOccursAsUnbounded();		
+			
+			BeanElement resriesgo= def.createElement(Rriesgo, SchemaTypeName.XS_STRING);
+			resriesgo.setLabel("Respuesta al riesgo");			
+			BeanFacetTableRef respuestasFacet =resriesgo.addFacetTableRef(dataset.getTable(Path.parse("/root/Catalogos/Matrices/Catalogo_de_Riesgos_de_Objetivos_de_Riesgo_conforme_objetivos/Riesgos_conforme_objetivos")));
+			respuestasFacet.setDisplayPattern("${./Controles_genericos}");
+			respuestasFacet.setFilter(CustomFilter.class);
+			resriesgo.setMinOccurs(0);
+			resriesgo.setMinOccursErrorMessage("");
+			resriesgo.setMaxOccursAsUnbounded();			
+			
+			def.createElement(RESPUESTA_RIESGO_FOCUS, SchemaTypeName.XS_INTEGER);	
+			
+			TableEntitySelection selection = aContext.getEntitySelection();			
+			
+			if(selection instanceof RecordEntitySelection) {	
 				
-				Adaptation record = ((RecordEntitySelection) selection).getRecord();
+				Adaptation record = ((RecordEntitySelection) selection).getRecord();	
+				
+				riesgosElement.setDefaultValue(record.getValueWithoutResolution(Riesgo));
+				resriesgo.setDefaultValue(record.getValueWithoutResolution(Rriesgo));	
 				
 				if(aContext.getServiceKey().equals(ServiceKey.DUPLICATE))
+					
 					aBuilder.registerNewDuplicatedRecord(OBJECT_KEY, record);
 				else
-					aBuilder.registerRecordOrDataSet(OBJECT_KEY, record);
-				
-			} else {
-				
-				aBuilder.registerNewRecord(OBJECT_KEY, selection.getTable());
-				
-			}
-			
+					aBuilder.registerRecordOrDataSet(OBJECT_KEY, record);				
+			} else {				
+				aBuilder.registerNewRecord(OBJECT_KEY, selection.getTable());				
+			}			
 		}
 		
 	}
 
+	
+	private void ajaxCallback(UserServiceAjaxContext anAjaxContext, UserServiceAjaxResponse anAjaxResponse){
+    	
+    	Adaptation dataset = anAjaxContext.getValueContext(OBJECT_KEY).getAdaptationInstance();
+    	AdaptationTable table = dataset.getTable(Path.parse("/root/Formularios/FABAN"));
+    	
+    	String identificador = null;
+    	String proceso = null;
+    	
+    	
+    	String value = anAjaxContext.getParameter("fieldValue");
+    	System.out.println(value);
+    	
+    	if(value != null && !value.isBlank()) {
+
+	    	Adaptation record = table.lookupAdaptationByPrimaryKey(PrimaryKey.parseString(value));
+	    	
+	    	identificador = record.getString(Path.parse("./Identificador"));
+	    	proceso = record.getString(Path.parse("./Proceso_operativo"));
+	    	
+    	
+    	}
+    	
+    	UserServiceWriter aWriter = anAjaxResponse.getWriter();
+    	
+    	identificador = identificador == null ? "null" : "'" + identificador + "'";
+    	
+    	
+    	if(proceso == null) {
+    		
+    		aWriter.addJS_cr("proceso = null;");
+    		
+    	} else {
+    	
+			aWriter.addJS_cr("proceso = {");
+			aWriter.addJS_cr("key: '" + proceso + "',");
+			aWriter.addJS_cr("label: '',");
+			aWriter.addJS_cr("previewURL: undefined");
+			aWriter.addJS_cr("};");
+		
+    	}
+		
+		aWriter.addJS_cr("ebx_form_setValue('" + idFABPrefix + "', " +  identificador + ")");
+		aWriter.addJS_cr("ebx_form_setValue('" + procesosPrefix + "', proceso)");
+
+    	
+    	
+    }
+		
 	@Override
 	public void validate(UserServiceValidateContext<T> arg0) {
 		
 		
 	}
 	
-	public static class EnumerationConstraint<T> implements ConstraintEnumeration<T> {
+	public static class EnumerationConstraint implements ConstraintEnumeration<String> {
 
 		@Override
-		public void checkOccurrence(T arg0, ValueContextForValidation arg1) throws InvalidSchemaException {
+		public void checkOccurrence(String arg0, ValueContextForValidation arg1) throws InvalidSchemaException {
 			// TODO Auto-generated method stub
 			
 		}
@@ -549,17 +757,18 @@ private void pane(UserServicePaneContext aPaneContext, UserServicePaneWriter aWr
 		}
 
 		@Override
-		public String displayOccurrence(T arg0, ValueContext arg1, Locale arg2) throws InvalidSchemaException {
+		public String displayOccurrence(String arg0, ValueContext aContext, Locale arg2) throws InvalidSchemaException {
 			// TODO Auto-generated method stub
 			return null;
 		}
 
-		@SuppressWarnings("unchecked")
 		@Override
-		public List<T> getValues(ValueContext aContext) throws InvalidSchemaException {
-Query<Tuple> query = dataset.createQuery("SELECT DISTINCT Riesgo FROM \"/root/Catalogos/Matrices/Catalogo_de_Riesgos_de_Objetivos_de_Riesgo_conforme_objetivos/Riesgos_conforme_objetivos\""); 
+		public List<String> getValues(ValueContext aContext) throws InvalidSchemaException {
 			
-			List<T> valuesList = new ArrayList<T>();
+			
+			Query<Tuple> query = dataset.createQuery("SELECT DISTINCT Riesgo FROM \"/root/Catalogos/Matrices/Catalogo_de_Riesgos_de_Objetivos_de_Riesgo_conforme_objetivos/Riesgos_conforme_objetivos\""); 
+			
+			List<String> valuesList = new ArrayList<>();
 			
 			try(QueryResult<Tuple> result=  query.getResult()){
 				
@@ -567,7 +776,7 @@ Query<Tuple> query = dataset.createQuery("SELECT DISTINCT Riesgo FROM \"/root/Ca
 				
 				while(it.hasNext()) {
 					
-					valuesList.add((T) it.next().get(0, String.class));
+					valuesList.add(it.next().get(0, String.class));
 						
 				}
 				
@@ -575,18 +784,29 @@ Query<Tuple> query = dataset.createQuery("SELECT DISTINCT Riesgo FROM \"/root/Ca
 			
 			return valuesList;
 		}
+		
 	}
 	public static class CustomFilter implements TableRefFilter {
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public boolean accept(Adaptation anAdaptation, ValueContext aContext) {
-			String banVal = (String) vc.getValue(Riesgo);
+
+			Integer index = (Integer) aContext.getValue(Path.parse("../resriesgofocus"));
+			List<String> riesgoList = (List<String>) aContext.getValue(Path.parse("../Medidas_garantias_privacidad_seguridad_adoptadas_funcion_riesgos"));
+			String riesgo = null;
+				
+			if(index == null)
+				return true;
+			
+			if(index < riesgoList.size()) riesgo = riesgoList.get(index);
+			
 			String tablaVal = anAdaptation.getString(Path.parse("./Riesgo"));			
-			if(banVal == null || tablaVal == null) { 
+			if(riesgo == null || tablaVal == null) { 
 				
 				return false;
 				
-			} else if(banVal.equals(tablaVal)) { 
+			} else if(riesgo.equals(tablaVal)) { 
 				
 				return true;
 				
@@ -600,6 +820,7 @@ Query<Tuple> query = dataset.createQuery("SELECT DISTINCT Riesgo FROM \"/root/Ca
 		@Override
 		public void setup(TableRefFilterContext aContext) {
 			// TODO Auto-generated method stub
+
 			
 		}
 
