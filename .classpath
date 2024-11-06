@@ -9,9 +9,10 @@
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
 	<classpathentry kind="lib" path="D:/Librerias/ebx.jar"/>
-	<classpathentry kind="lib" path="D:/Librerias/ebx-api.jar"/>
-	<classpathentry kind="lib" path="D:/Librerias/servlet-api.jar"/>
 	<classpathentry kind="lib" path="D:/Librerias/ebx-addons.jar"/>
+	<classpathentry kind="lib" path="D:/Librerias/ebx-api.jar"/>
+	<classpathentry kind="lib" path="D:/Librerias/ebx-lz4.jar"/>
 	<classpathentry kind="lib" path="D:/Librerias/ebx-resources-api.jar"/>
+	<classpathentry kind="lib" path="D:/Librerias/servlet-api.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
