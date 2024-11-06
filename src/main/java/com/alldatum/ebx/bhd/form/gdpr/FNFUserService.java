@@ -85,6 +85,7 @@ public class FNFUserService <T extends TableEntitySelection> implements UserServ
 	private String idFABPrefix;
 	private String procesosPrefix;
 	private String codigoPrefix;
+	private String codigoPrefix2;
 
 	private String MenuAPrefix;
 	private String CondicionAPrefix;
