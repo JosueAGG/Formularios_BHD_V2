@@ -357,7 +357,7 @@ public class CuestionarioUserService<T extends TableEntitySelection> implements 
 		causalegtfncvPrefix = aWriter.getPrefixedPath(CAUSALEG_TFNCV_PATH).format();
 
 
-		aWriter.add_cr("<h3>Datos b√°sicos del cuestionario para evaluaci√≥n de impacto</h3>");
+		aWriter.add_cr("<h3>Datos b·sicos del cuestionario para evaluaciÛn de impacto</h3>");
 		aWriter.startExpandCollapseBlock(UserMessage.createInfo(""), true);
 		aWriter.addFormRow(Path.parse("Fecha_creacion"));
 		aWriter.addFormRow(Path.parse("Identificador"));

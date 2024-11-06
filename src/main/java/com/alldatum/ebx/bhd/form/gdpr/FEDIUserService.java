@@ -228,11 +228,23 @@ public class FEDIUserService<T extends TableEntitySelection> implements UserServ
         
     	//Datos de revisor metodológico
     	//Aceptable
+    	
+    	private static final Path CONCLUCION_ACEPTABLE_PATH = Path.parse("JustificacionAceptable");  	
+
+    	//iInaceptable
+    	
+    	private static final Path CONCLUCION_INACEPTABLE_PATH = Path.parse("Justificacionina");
+        
+        
+        
+        
+    	//Datos de revisor metodológico
+    	//Aceptable
     	private static final Path MENU_ACEPTABLE_PATH = Path.parse("./Memorando_delegado/AcepM");
     	private static final Path CONDICION_ACEPTABLE_PATH = Path.parse("./Memorando_delegado/Consideraciones_adicionales_A");  	
 
     	//iInaceptable
-    	private static final Path MENU_INACEPTABLE_PATH = Path.parse("./Memorando_delegado/Menuinaceptabl");
+    	private static final Path MENU_INACEPTABLE_PATH = Path.parse("./Memorando_delegado/Menuinaceptable");
     	private static final Path CONDICION_INACEPTABLE_PATH = Path.parse("./Memorando_delegado/Consideraciones_adicionales_I");
     	
         
@@ -440,7 +452,8 @@ public class FEDIUserService<T extends TableEntitySelection> implements UserServ
 	    String MInaceptablePrefix;
 	    String CInaceptablePrefix;
 
-	    
+	    String ConaceptablePrefix;
+	    String CoInaceptablePrefix;
         
         //
         private static ValueContext vc;
@@ -505,8 +518,9 @@ public class FEDIUserService<T extends TableEntitySelection> implements UserServ
      		    // Prefijos para Inaceptable
      		  MInaceptablePrefix = aWriter.getPrefixedPath(MENU_INACEPTABLE_PATH).format();
      		  CInaceptablePrefix = aWriter.getPrefixedPath(CONDICION_INACEPTABLE_PATH).format();
-    
-                
+    //Conclucion
+     		 ConaceptablePrefix = aWriter.getPrefixedPath(CONCLUCION_ACEPTABLE_PATH).format();
+     		CoInaceptablePrefix = aWriter.getPrefixedPath(CONCLUCION_INACEPTABLE_PATH).format();
                 
                 // Construyendo los prefix de herencia
                 pDestinatarioE = aWriter.getPrefixedPath(DESTINATARIOE_PATH).format();
@@ -1392,10 +1406,10 @@ public class FEDIUserService<T extends TableEntitySelection> implements UserServ
         		aWriter.addFormRow(revDropDown);
         		String value2 = (String) aPaneContext.getValueContext(OBJECT_KEY, revPath).getValue();		
         		startBlock(aWriter, "block_revision_aceptable", "aceptable".equalsIgnoreCase(value2));	
-        		aWriter.addFormRow(Path.parse("JustificacionAceptable"));
+        		aWriter.addFormRow(CONCLUCION_ACEPTABLE_PATH);
         		endBlock(aWriter);		
         		startBlock(aWriter, "block_revision_inaceptable", "inaceptable".equalsIgnoreCase(value2));
-        		aWriter.addFormRow(Path.parse("Justificacionina"));
+        		aWriter.addFormRow(CONCLUCION_INACEPTABLE_PATH);
         		endBlock(aWriter);		
         		aWriter.endExpandCollapseBlock();       
              
@@ -1572,6 +1586,7 @@ public class FEDIUserService<T extends TableEntitySelection> implements UserServ
                 
             	
        		 // Funcion que ocupan los campos String que tiene valores definidos y dependindo la selecion muestra los campos (Cargo)
+                /*
        	    aWriter.addJS_cr("function displayBlockDPO(buttonValue){");
        	    aWriter.addJS_cr("const blockAceptable = document.getElementById('block_dpo_aceptable');");
        	    aWriter.addJS_cr("const blockInaceptable = document.getElementById('block_dpo_inaceptable');");
@@ -1587,15 +1602,12 @@ public class FEDIUserService<T extends TableEntitySelection> implements UserServ
        	    aWriter.addJS_cr("blockAceptable.style.display = 'none';");
        	    aWriter.addJS_cr("blockInaceptable.style.display = 'none';");
        	    aWriter.addJS_cr("}");
-       	    aWriter.addJS_cr("}"); 
+       	    aWriter.addJS_cr("}");*/ 
                 
                 
-                
-                
-                // Funcion que ocupan los campos String que tiene valores definidos y dependindo la selecion muestra los campos (Revisión metodológica)
-    		aWriter.addJS_cr("function displayBlockRevision(buttonValue) {");
-    		aWriter.addJS_cr("  const blockAceptable = document.getElementById('block_revision_aceptable');");
-    		aWriter.addJS_cr("  const blockInaceptable = document.getElementById('block_revision_inaceptable');");
+    		aWriter.addJS_cr("function displayBlockDPO(buttonValue) {");
+    		aWriter.addJS_cr("  const blockAceptable = document.getElementById('block_dpo_aceptable');");
+    		aWriter.addJS_cr("  const blockInaceptable = document.getElementById('block_dpo_inaceptable');");
     		aWriter.addJS_cr("  if (buttonValue === 'Aceptable') {");
     		aWriter.addJS_cr("    resetValuesList('" + MInaceptablePrefix + "');");
     		aWriter.addJS_cr("    resetValuesList('" + CInaceptablePrefix + "');");
@@ -1613,7 +1625,28 @@ public class FEDIUserService<T extends TableEntitySelection> implements UserServ
     		aWriter.addJS_cr("    blockInaceptable.style.display = 'none';");
     		aWriter.addJS_cr("  }");
     		aWriter.addJS_cr("}");
+                
+                // Funcion que ocupan los campos String que tiene valores definidos y dependindo la selecion muestra los campos (Revisión metodológica)
+    		aWriter.addJS_cr("function displayBlockRevision(buttonValue) {");
+    		aWriter.addJS_cr("  const blockAceptable = document.getElementById('block_revision_aceptable');");
+    		aWriter.addJS_cr("  const blockInaceptable = document.getElementById('block_revision_inaceptable');");
+    		aWriter.addJS_cr("  if (buttonValue === 'Aceptable') {");
+    		aWriter.addJS_cr("    resetValuesList('" + ConaceptablePrefix + "');");
+    		aWriter.addJS_cr("    blockAceptable.style.display = 'block';");
+    		aWriter.addJS_cr("    blockInaceptable.style.display = 'none';");
+    		aWriter.addJS_cr("  } else if (buttonValue === 'Inaceptable') {");
+    		aWriter.addJS_cr("    resetValuesList('" + CoInaceptablePrefix + "');");
+    		aWriter.addJS_cr("    blockAceptable.style.display = 'none';");
+    		aWriter.addJS_cr("    blockInaceptable.style.display = 'block';");
+    		aWriter.addJS_cr("  } else {");
+    		aWriter.addJS_cr("    resetValuesList('" + CoInaceptablePrefix + "');");
+    		aWriter.addJS_cr("    blockAceptable.style.display = 'none';");
+    		aWriter.addJS_cr("    blockInaceptable.style.display = 'none';");
+    		aWriter.addJS_cr("  }");
+    		aWriter.addJS_cr("}");
 
+    		 		
+    		
     		aWriter.addJS_cr("function resetValuesList(path) {");
     		aWriter.addJS_cr("  let i = 0;");
     		aWriter.addJS_cr("  while (ebx_form_isNodeDefined(path + '[' + i + ']')) {");

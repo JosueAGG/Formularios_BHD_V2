@@ -66,7 +66,7 @@ public class FABANUserService<T extends TableEntitySelection> implements UserSer
 	private static final Path MENU_INACEPTABLE_PATH = Path.parse("./MenuIna");
 	private static final Path CONDICION_INACEPTABLE_PATH = Path.parse("./ConcideracionIna");
 	private static final Path NOMBRE_REVISORI_PATH = Path.parse("./Nombrerevisorina");
-	private static final Path ROL_CARGOI_PATH = Path.parse("./RMOPDP/RolocargoinaFAB");
+	private static final Path ROL_CARGOI_PATH = Path.parse("./RolocargoinaFAB");
 
 	private static Adaptation dataset;
 	
@@ -208,7 +208,7 @@ public class FABANUserService<T extends TableEntitySelection> implements UserSer
 		aWriter.addFormRow(Path.parse("Fines_posteriores"));
 		aWriter.endExpandCollapseBlock();
 		//-----------------------------------------
-		aWriter.add_cr("<h3>Alcance y 谩mbito del tratamiento</h3>");	
+		aWriter.add_cr("<h3>Alcance y 醡bito del tratamiento</h3>");	
 		aWriter.startExpandCollapseBlock(UserMessage.createInfo("Datos personales"), true);
 		aWriter.addFormRow(Path.parse("CategorIa"));
 		aWriter.addFormRow(Path.parse("Frecuencia_de_recoleccion"));
@@ -220,18 +220,18 @@ public class FABANUserService<T extends TableEntitySelection> implements UserSer
 		aWriter.addFormRow(Path.parse("Titulares_afectados"));
 		aWriter.addFormRow(Path.parse("Volumen"));
 		aWriter.endExpandCollapseBlock();		
-		aWriter.startExpandCollapseBlock(UserMessage.createInfo("Extensi贸n geogr谩fica"), true);
+		aWriter.startExpandCollapseBlock(UserMessage.createInfo("Extensi髇 geogr醘ica"), true);
 		aWriter.addFormRow(Path.parse("Extension_geografica"));
 		aWriter.endExpandCollapseBlock();		
-		aWriter.startExpandCollapseBlock(UserMessage.createInfo("Duraci贸n"), true);
+		aWriter.startExpandCollapseBlock(UserMessage.createInfo("Duraci髇"), true);
 		aWriter.addFormRow(Path.parse("Duracion_del_tratamiento_en_el_tiempo"));
 		aWriter.endExpandCollapseBlock();		
-		aWriter.startExpandCollapseBlock(UserMessage.createInfo("Plazos de conservaci贸n despu茅s de concluir la relaci贸n con el titular"), true);
+		aWriter.startExpandCollapseBlock(UserMessage.createInfo("Plazos de conservaci髇 despu閟 de concluir la relaci髇 con el titular"), true);
 		aWriter.addFormRow(Path.parse("Plazos_de_conservacion_titular"));
 		aWriter.endExpandCollapseBlock();
 		//---------------------------------------
 		aWriter.add_cr("<h3>Naturaleza</h3>");	
-		aWriter.startExpandCollapseBlock(UserMessage.createInfo("Implementaci贸n"), true);
+		aWriter.startExpandCollapseBlock(UserMessage.createInfo("Implementaci髇"), true);
 		aWriter.addFormRow(Path.parse("Operaciones_ejecuta"));		
 		startBooleanBlock(aPaneContext, aWriter, Path.parse("Casos_de_uso"), "block_casos_uso");
 		aWriter.addFormRow(Path.parse("Senales_caso_de_uso"));
@@ -244,7 +244,7 @@ public class FABANUserService<T extends TableEntitySelection> implements UserSer
 		endBlock(aWriter);		
 		aWriter.addFormRow(Path.parse("Inventario_de_activos"));
 		aWriter.endExpandCollapseBlock();		
-		aWriter.startExpandCollapseBlock(UserMessage.createInfo("Levantamiento y/o generaci贸n de datos"), true);		
+		aWriter.startExpandCollapseBlock(UserMessage.createInfo("Levantamiento y/o generaci髇 de datos"), true);		
 		startBooleanBlock(aPaneContext, aWriter, Path.parse("Externo2"), "block_externo");
 		aWriter.addFormRow(Path.parse("origendatos"));
 		endBlock(aWriter);		
@@ -318,7 +318,7 @@ public class FABANUserService<T extends TableEntitySelection> implements UserSer
 		endBlock(aWriter);		
 		aWriter.endExpandCollapseBlock();
 		//---------------------------------------
-		aWriter.add_cr("<h3>Conclusi贸n juicio de idoneidad, proporcionalidad y necesidad</h3>");	
+		aWriter.add_cr("<h3>Conclusi髇 juicio de idoneidad, proporcionalidad y necesidad</h3>");	
 		aWriter.startExpandCollapseBlock(UserMessage.createInfo(""), true);
 		aWriter.addFormRow(Path.parse("Conclusion_juicio_de_idoneidad_proporcionalidad_necesidad"));
 		aWriter.endExpandCollapseBlock();		

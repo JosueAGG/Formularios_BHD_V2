@@ -148,18 +148,7 @@ public class FNCVDUserService <T extends TableEntitySelection> implements UserSe
 	
 private void pane(UserServicePaneContext aPaneContext, UserServicePaneWriter aWriter) {
 	
-    // Prefijos para Aceptable
-   MAceptablePrefix = aWriter.getPrefixedPath(MENU_ACEPTABLE_PATH).format();		    
-   CAceptablePrefix = aWriter.getPrefixedPath(CONDICION_ACEPTABLE_PATH).format();		    
-   NRvisorAPrefix = aWriter.getPrefixedPath(NOMBRE_REVISORA_PATH).format();		    
-   RCRevisorAPrefix = aWriter.getPrefixedPath(ROL_CARGOA_PATH).format();
-   
 
-    // Prefijos para Inaceptable
-  MInaceptablePrefix = aWriter.getPrefixedPath(MENU_INACEPTABLE_PATH).format();
-  CInaceptablePrefix = aWriter.getPrefixedPath(CONDICION_INACEPTABLE_PATH).format();
-  NRvisorIPrefix = aWriter.getPrefixedPath(NOMBRE_REVISORI_PATH).format();
-  RCRevisorIPrefix = aWriter.getPrefixedPath(ROL_CARGOI_PATH).format();
 	
 	aWriter.setCurrentObject(RESPUESTAS_KEY);
 	String rriesgofocusPrefix = aWriter.getPrefixedPath(RESPUESTA_RIESGO_FOCUS).format();
@@ -181,7 +170,18 @@ private void pane(UserServicePaneContext aPaneContext, UserServicePaneWriter aWr
 	
 	aWriter.setCurrentObject(OBJECT_KEY);
 	
-	
+    // Prefijos para Aceptable
+   MAceptablePrefix = aWriter.getPrefixedPath(MENU_ACEPTABLE_PATH).format();		    
+   CAceptablePrefix = aWriter.getPrefixedPath(CONDICION_ACEPTABLE_PATH).format();		    
+   NRvisorAPrefix = aWriter.getPrefixedPath(NOMBRE_REVISORA_PATH).format();		    
+   RCRevisorAPrefix = aWriter.getPrefixedPath(ROL_CARGOA_PATH).format();
+   
+
+    // Prefijos para Inaceptable
+  MInaceptablePrefix = aWriter.getPrefixedPath(MENU_INACEPTABLE_PATH).format();
+  CInaceptablePrefix = aWriter.getPrefixedPath(CONDICION_INACEPTABLE_PATH).format();
+  NRvisorIPrefix = aWriter.getPrefixedPath(NOMBRE_REVISORI_PATH).format();
+  RCRevisorIPrefix = aWriter.getPrefixedPath(ROL_CARGOI_PATH).format();
 	idFABPrefix = aWriter.getPrefixedPath(ID_FAB_PATH).format();
 	procesosPrefix = aWriter.getPrefixedPath(PROCESOS_OPERATIVOS_PATH).format();
 	
