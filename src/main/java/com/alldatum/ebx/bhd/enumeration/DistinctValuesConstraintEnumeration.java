@@ -55,10 +55,12 @@ public class DistinctValuesConstraintEnumeration implements ConstraintEnumeratio
 
             while (it.hasNext()) {
                 String value = it.next().get(0, String.class);
-                // Normalizamos el valor para que no sea sensible a mayúsculas y acentos
-                String normalizedValue = normalizeString(value);
+                // Recortar los espacios y normalizar el valor
+                String normalizedValue = normalizeString(value.trim());
+                
+                // Verificar si la lista ya contiene el valor normalizado
                 if (!containsIgnoreCaseAndAccent(valuesList, normalizedValue)) {
-                    valuesList.add(value);
+                    valuesList.add(value.trim());  // Añadir el valor original pero sin espacios
                 }
             }
 
@@ -74,8 +76,8 @@ public class DistinctValuesConstraintEnumeration implements ConstraintEnumeratio
         if (input == null) {
             return null;
         }
-        // Convertir a minúsculas
-        String lowerCaseString = input.toLowerCase(Locale.ROOT);
+        // Convertir a minúsculas y eliminar espacios en blanco
+        String lowerCaseString = input.toLowerCase(Locale.ROOT).trim();
         // Eliminar acentos y caracteres diacríticos
         String normalizedString = Normalizer.normalize(lowerCaseString, Normalizer.Form.NFD);
         return normalizedString.replaceAll("\\p{M}", "");
